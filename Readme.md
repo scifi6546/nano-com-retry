@@ -6,7 +6,7 @@ Ram (64 k of it)|
 |                                   |-------------------------------------|                                   |
 |                                   |-------------------------------------|                RAM                |
 |                                   |-------------------------------------|                64 K               |
-|                                   |---- Ram (16 bit connection----------|                ID (0xF)           |
+|                                   |---- Ram (16 bit connection----------|                ID (0xFF)          |
 |                                   |-------------------------------------|                                   |
 |                                   |-------------------------------------|                                   |
 |                                   |-------------------------------------|                                   |
@@ -125,18 +125,24 @@ Ram (64 k of it)|
    | | | | | | | | | | | | | | | |                                           | | | | | | | | | | | | | | | |
 ```
 There are two busses, a system bus and  ram bus. 
+
 # How Does the System Bus Work?
 In the system bus there is a 16 bit lane connected to every divice. If the cpu sets the lane to 0x5 then every other 
 device will read 0x5 on that lane. There is a secondary 4 bit lane (called device select bus (DSB)) specifing which 
 device has the ability to write. This lane can be read and wrote to by every device. Each device has a unique ID 
 assigned to it.
+
 ## Operation of system bus.
 The system bus operates on a 10 MHz clock. At the beginning of each clock the cpu (or in theory any other device) specifies
 which device can write to the system bus using the DSB. Next the availible device writes to the system bus. On the next 
 clock cycle every other device reads from the system bus and the process repeats.
+
 # How does the ram bus work?
-The ram bus operates on the same principle as the system bus. The ram bus operates on a 10MHz clock. At the beginning of the
-clock a device (usually the cpu) specifies which device can write to the bus. A device then writes to the bus and asks for 
-a memory address. On the next clock frequency the value 0xFF is written to the Device select bus and the ram writes the 
-data at the selected memory address to the ram bus.
-   
+The ram bus operates on simmilar principles to the system bus. The ram bus operates on a 10MHz clock. At the beginning of the
+clock the MMU specifies which device can write to the bus over the device select pins. On the next clock cycle the selected
+device then writes a value to the device select pin. If the value is 0x0 then a read operation is selected. If the value is 
+0x1 then a write operation is selected. The periphial then writes the address to write too or to read from.On the next clock
+cycle the selected device then writes to the bus if it is writing memory if memory is read then the MMU reads from the bus
+to get the desired address.On the next clock cycle the pending write is read from the bus and commited if a write is specified.
+If a read was specified than nothing happens for this clock cycle. THe process then repeats.
+the memory 
