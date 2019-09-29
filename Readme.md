@@ -138,11 +138,13 @@ which device can write to the system bus using the DSB. Next the availible devic
 clock cycle every other device reads from the system bus and the process repeats.
 
 # How does the ram bus work?
-The ram bus operates on simmilar principles to the system bus. The ram bus operates on a 10MHz clock. At the beginning of the
-clock the MMU specifies which device can write to the bus over the device select pins. On the next clock cycle the selected
-device then writes a value to the device select pin. If the value is 0x0 then a read operation is selected. If the value is 
-0x1 then a write operation is selected. The periphial then writes the address to write too or to read from.On the next clock
-cycle the selected device then writes to the bus if it is writing memory if memory is read then the MMU reads from the bus
-to get the desired address.On the next clock cycle the pending write is read from the bus and commited if a write is specified.
-If a read was specified than nothing happens for this clock cycle. THe process then repeats.
-the memory 
+The ram bus has 4 lanes. A 8bit device select, a 16 bit address write and a 16 bit data write and a write type.
+## 1.Device select
+	The mmu writes the selected device id to the device select bus.
+## 2. Address write
+	the selected but then writes the type of operation to write type lane. If write than put 0, if read put 1
+	If writing then the client puts the data to write into the data bus.
+## 3. MMU Read
+	The mmu then reads from the device select data bus and address bus andwrites to the databus if memory is to be read.
+## 4. Data Read
+	The client device then reads from the address bus.
