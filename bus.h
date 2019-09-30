@@ -11,4 +11,6 @@ struct ram_bus{
 	char device_select;
 	bool WRITE_OR_READ;
 }
+#define WRITE 0
+#define READ 1
 #endif
