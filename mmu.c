@@ -1,10 +1,26 @@
 #include "mmu.h"
-ram_bus tick(ram_bus *in){
+
+int counter=0;
+void device_select(ram_bus* in){
+	in->device_select=0x0;//cpu id
+}
+void bus_read(ram_bus *in){
+	if(in->WRITE_OR_READ==WRITE){
+		//setup get values to write
+	}
+	if(in->WRITE_OR_READ==READ){
+		//setup stuf to read
+	}
+}
+void bus_write(ram_bus *in){
+
+}
+void tick(ram_bus *in){
 	if(tick_counter%4==0){
-		return device_select(in);
+		device_select(in);
 	}
 	if(tick_counter%4==2){
-		return bus_read(in);
+		bus_read(in);
 	}
 	counter++;
 }
