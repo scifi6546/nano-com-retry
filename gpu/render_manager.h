@@ -6,11 +6,9 @@
 #include "mesh.h"
 
 
-const int display_height = 800;
-const int display_width = 1000;
 
-int getHeight(){return display_height;}
-int getWidth(){return display_width;}
+int getHeight();
+int getWidth();
 //public functions
 //initilizes render manager
 void initRender();

@@ -5,6 +5,11 @@
 #include "camera.h"
 #include "shader.h"
 #include "error.h"
+const int display_height = 800;
+const int display_width = 1000;
+
+int getHeight(){return display_height;}
+int getWidth(){return display_width;}
 unsigned int frameBufferFBO;
 unsigned int frameBufferTex;//depth map texture
 unsigned int mainBufferFBO;
