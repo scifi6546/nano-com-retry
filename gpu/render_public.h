@@ -58,6 +58,10 @@ initizes rendering engine
 */
 void initRenderP();
 /*
+ * Generates texture from image data
+*/
+Text genTexturePVec(unsigned char* imagedata,int width,int height,int num_components);
+/*
 Not Tested
 makes texture will get rid of p conflists with genTexture from texture.cpp
 */

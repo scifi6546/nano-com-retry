@@ -95,6 +95,16 @@ Text genTextureP(std::string filename){
     return out;
 }
 
+Text genTexturePVec(unsigned char* imagedata,int width,int height,int num_components){
+	Texture temp = genTextureVec(imagedata,width,height,num_components);
+    Text out = insertTexture(temp);
+    printf("temp.id: %i \n",out.id);
+    out.height=temp.height;
+    out.width=temp.width;
+
+    return out;
+	
+}
 Mesh genMesh(Model in,Text texture,glm::vec3 pos){
     RunTimeModel temp = initMesh({in})[0];
     Mesh out = insertMesh(temp);

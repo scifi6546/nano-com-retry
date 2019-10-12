@@ -7,6 +7,41 @@
 #include "error.h"
 #include <vector>
 #include "render_target.h"
+Texture genTextureVec(unsigned char* imagedata,int width,int height,int num_components){
+
+    Texture out;
+    getError();
+    GLuint *texture;
+    //printf("num_textures = %i\n", num_textures);
+    // /printf("texture_new: %i \n",temp_texture);
+    texture = (GLuint *)calloc(1, sizeof(GLuint));
+    glGenTextures(1,&out.color_texture);
+    /*
+    for (int i = 0; i < num_textures; i++)
+    {
+        glGenTextures(1, &texture[i]);
+        printf("texture[%i] = %i\n", i, texture[i]);
+    }*/
+    
+    glBindTexture(GL_TEXTURE_2D, out.color_texture);
+    getError();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, imagedata);
+    getError();
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //stbi_image_free(imagedata);
+    getError();
+    glBindTexture(GL_TEXTURE_2D,1);
+    out.width=width;
+    out.height=height;
+    return out;
+    
+}
 Texture genTexture(std::string filename){
     Texture out;
     getError();

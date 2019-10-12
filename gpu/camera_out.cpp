@@ -27,6 +27,7 @@ void Camera::moveCam(float deltax,float deltay){
     }if(thetax<=-PIt/2.0){
         thetax=-PIt/2.0;
     }
+	printf("thetax: %f thetay: %f\n",thetax,thetay);
 }
 void Camera::sendToRender(){
     //printf("positon.x: %f, position.y: %f, position.z: %f\n",

@@ -4,6 +4,8 @@
 #include <GL/glew.h>
 #include <vector>
 #include "render_target.h"
+Texture genTextureVec(unsigned char* imagedata,int width,
+		int height,int num_components);
 void genTexture(std::vector<std::string> filename);//decripitated
 void bindTexture(unsigned int unit);//decrepitated do not use!
 /*

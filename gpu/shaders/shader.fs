@@ -28,5 +28,5 @@ void main(){
     //doing fog
 
     //color=texture(diffuse,texcoord0)*vec4(color_light,1.0)*min(50/(z_depth),1)*vec4(sky_color,1.0);
-   // color=texture(diffuse,texcoord0);
+   color=texture(diffuse,texcoord0);
 }
