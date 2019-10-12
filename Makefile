@@ -1,2 +1,2 @@
 main:
-	gcc main.c -o out
+	gcc main.c mmu.c -o out
