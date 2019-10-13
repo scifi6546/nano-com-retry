@@ -12,6 +12,8 @@ class good_pair{
             _b=second;};
         T1 a(){return _a;};
         T2 b(){return _b;};
+		void setA(T1 a){_a=a;};
+		void setB(T2 b){_b=b;};
     private:
         T1 _a;
         T2 _b;
@@ -43,6 +45,9 @@ Texture getTexture(Text in){
     //if(in.id!=0)
     //    printf("in.id: %i\n",in.id);
     return Textures[in.id].b();
+}
+void setTexture(Text set,Texture set_to){
+	Textures[set.id].setB(set_to);
 }
 /*
 Checks the integreity of the texture vector
@@ -103,7 +108,11 @@ Text genTexturePVec(unsigned char* imagedata,int width,int height,int num_compon
     out.width=temp.width;
 
     return out;
-	
+}
+Text updateTexturePVec(Text edit,unsigned char* imagedata,int width,int height,int num_components){
+	Texture temp = getTexture(edit);
+	temp = updateTextureVec(temp,imagedata,width,height,num_components);
+	setTexture(edit,temp);
 }
 Mesh genMesh(Model in,Text texture,glm::vec3 pos){
     RunTimeModel temp = initMesh({in})[0];

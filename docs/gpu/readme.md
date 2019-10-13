@@ -4,6 +4,7 @@ Memory 0x100000 bytes
 
 1 modes:
 256x256 16 colors
+each pixel is 4 bits long
 
 input signal
 phase 1.

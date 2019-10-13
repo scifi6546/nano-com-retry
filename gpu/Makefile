@@ -14,8 +14,7 @@ main: main.cpp
 	$(CC) -c $(CFLAGS) texture.cpp -o texture.o
 	$(CC) -c $(CFLAGS) mesh.cpp -o mesh.o
 	$(CC) -c $(CFLAGS) stb_image.c -o stb_image.o
-	$(CC) -c $(CFLAGS) camera.cpp -o camera.o
-	$(CC) $(CFLAGS) main.o shader.o camera_out.o loadfile.o display.o model.o mesh.o error.o texture.o stb_image.o camera.o render_public.o render_manager.o -o out $(LIBS)
+	$(CC) -c camera.cpp -o camera.o
 run:
 	$(MAKE) main
 	./out
@@ -54,3 +53,4 @@ debug:
 	gdb out
 all:
 	$(MAKE) main
+

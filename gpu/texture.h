@@ -23,5 +23,10 @@ Not Tested
 Generates a empty texture
 */
 Texture genTextureEmp();
+/*
+ *Edits a texture
+ */
+Texture updateTextureVec(Texture edit, unsigned char* image_data,int width,int height,int num_components);
+
 
 #endif

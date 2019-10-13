@@ -141,8 +141,8 @@ void initRender(){
     //shaderInit();
     
     getError();
-    createShaderT({"shaders/shader.vs","shaders/shader.fs"},gameWorld);
-    createShaderT({"shaders/buffer_shader.vs","shaders/buffer_shader.fs"},bufferWorld);
+    createShaderT({"gpu/shaders/shader.vs","gpu/shaders/shader.fs"},gameWorld);
+    createShaderT({"gpu/shaders/buffer_shader.vs","gpu/shaders/buffer_shader.fs"},bufferWorld);
     getError();
     rManager::RuseShader(gameWorld);
     getError();
