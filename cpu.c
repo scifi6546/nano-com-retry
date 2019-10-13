@@ -1,7 +1,10 @@
 #include "image.h"
 #include "bus.h"
+#include "bear.h"
+#include "char.h"
+#include "sanford.h"
 #include "gulkana.h"
-#include "mendenhall.h"
+#include "doom.h"
 int tick=0;
 char x=0;
 char y=0;
@@ -17,10 +20,17 @@ void cpu_tick(struct bus *sys_bus,struct ram_bus *in){
 	}
 	if(tick%2==1){
 		unsigned short color =logo[index];
-		if(logo_index%3==1)
+		char num_img = 6;
+		if(logo_index%num_img==1)
 			color=gulkana[index];
-		if(logo_index%3==2)
-			color=mendenhall[index];
+		if(logo_index%num_img==2)
+			color=sanford[index];
+		if(logo_index%num_img==3)
+			color=bear[index];
+		if(logo_index%num_img==4)
+			color=chari[index];
+		if(logo_index%num_img==5)
+			color=doom[index];
 		unsigned short duration = 1;
 		sys_bus->data=(color<<12)+duration;
 		index++;

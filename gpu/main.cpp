@@ -29,8 +29,8 @@ class GpuMemory{
 		void _sendToDisplay(){
 			for(int i =0;i<256*256;i++){
 				int color = _colorTable[_mem[i]];
-				char r = color>>32;
-				char g = (color^0xFF00FF)>>16;
+				char r = color>>16;
+				char g = (color^0xFF00FF)>>8;
 				char b = color^0xFFFF00;
 				img[i*4]=r;
 				img[i*4+1]=g;
