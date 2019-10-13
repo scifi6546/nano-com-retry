@@ -10,9 +10,6 @@ const int width = 256;
 const int height = 256;
 const int num_comp = 4;
 unsigned char img[width*height*num_comp];
-
-glm::vec3 pos(0.02,0.2,0.5);
-Camera cam(pos,0.0734f,1.5707f);
 Mesh sc_mesh;
 Text texture;
 
@@ -64,16 +61,23 @@ GpuMemory vram;
 void draw_thread(){
 	mtx.lock();
 	initRenderP();
-	float z=-1.0f;
-	float a = 0.6f;
+	float z=0.5f;
+	float a=0.5f;
 	for(int i=0;i<width*height*num_comp;i++){
 		img[i]=i;
 	}
 	Model screen(
-		{glm::vec3(-1.0*a,-1.0*a,z),glm::vec3(1.0*a,-1.0*a,z),glm::vec3(1.0*a,1.0*a,z),glm::vec3(-1.08*a,1.0*a,z)}
-		,{glm::vec2(0.0,1.0),glm::vec2(1.0,1.0),glm::vec2(1.0,0.0),glm::vec2(0.0,0.0)},
+		{glm::vec3(-1.0f,-1.0f,z),
+		glm::vec3(0.6f,-1.0f,z),
+		glm::vec3(0.6f,0.2f,z),
+		glm::vec3(-1.0f,0.2f,z)}
+		,{
+		glm::vec2(1.0f,0.0f),
+		glm::vec2(1.0f,1.0f),
+		glm::vec2(0.0f,1.0f),
+		glm::vec2(0.0f,0.0f)},
 		{0,1,2,0,3,2},
-		{glm::vec3(0.0,0.0,1.0),glm::vec3(0.0,0.0,1.0),glm::vec3(0.0,0.0,1.0),glm::vec3(0.0,0.0,1.0)});
+		{glm::vec3(0.0,0.0,0.0),glm::vec3(0.0,0.0,0.0),glm::vec3(0.0,0.0,0.0),glm::vec3(0.0f,0.0f,0.0f)});
     texture = genTexturePVec(img,width,height,num_comp);
 	sc_mesh = genMesh(screen,texture,glm::vec3(0.0,0.0,0.0));
 	mtx.unlock();
@@ -81,13 +85,13 @@ void draw_thread(){
 		mtx.lock();
 		//pos.y+=0.001f;
 		vram._sendToDisplay();
-		cam.setPos(pos);
-		updateTexturePVec(texture,img,width,height,num_comp);
-		cam.sendToRender();
+		//cam.setPos(pos);
+		updateTexturePVec(texture,img,256,256,4);
+		//cam.sendToRender();
 		drawMeshP(sc_mesh);
 		drawRender(false);
 		mtx.unlock();
-		usleep(1000);
+		usleep(16666);
 
 	}
 }
@@ -104,17 +108,20 @@ char color = 0;
 unsigned char draw_duration = 0;
 const char device_id = 0x02;
 int cycle_num=0;
+static char img_disp=0;
 void gpu_tick(bus *sys_bus, ram_bus *mem_bus){
 		mtx.lock();
 	if(sys_bus->device_select==device_id){
 		unsigned short data_in = sys_bus->data;
 		if(cycle_num%2==0){
 			x_axis =data_in>>8;
-			y_axis = data_in^0xF0;
+			y_axis = data_in^0xFF00;
 		}if(cycle_num%2==1){
-			color = data_in>>12;
+			if(img_disp==0)
+				color = data_in>>12;
 			draw_duration = data_in^0xF000;
 			unsigned short addr = x_axis+y_axis*256;
+			
 				for(unsigned char i=0;
 						i<draw_duration;i++){
 				vram.setMem(i+ addr,color);
