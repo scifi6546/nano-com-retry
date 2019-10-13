@@ -1,10 +1,13 @@
 LIBS=-lSDL2 -lGLEW  -lOpenGL -lpthread
 main:
 	make -C gpu
+	make -C gpu/rendering_lib
 	g++  -c $(LIBS) main.c -o main.o
 	g++ -c $(LIBS) mmu.c -o mmu.o
 	g++ -c $(LIBS) cpu.c -o cpu.o
-	g++ gpu/main.o gpu/shader.o gpu/camera_out.o gpu/loadfile.o gpu/display.o gpu/model.o gpu/mesh.o gpu/error.o gpu/texture.o gpu/stb_image.o gpu/camera.o gpu/render_public.o gpu/render_manager.o main.o mmu.o cpu.o -o out $(LIBS)
+	g++ gpu/gpu.o gpu/rendering_lib/shader.o gpu/rendering_lib/camera_out.o \
+	gpu/rendering_lib/loadfile.o gpu/rendering_lib/display.o gpu/rendering_lib/model.o \
+	gpu/rendering_lib/mesh.o gpu/rendering_lib/error.o gpu/rendering_lib/texture.o gpu/rendering_lib/stb_image.o gpu/rendering_lib/camera.o gpu/rendering_lib/render_public.o gpu/rendering_lib/render_manager.o main.o mmu.o cpu.o -o out $(LIBS)
 run:
 	$(MAKE) main
 	./out
