@@ -7,6 +7,7 @@
 #include "error.h"
 const int display_height = 1000;
 const int display_width = 1000;
+int __cycle_num=0;
 
 int getHeight(){return display_height;}
 int getWidth(){return display_width;}
@@ -162,6 +163,9 @@ void drawFrame(bool reset_mouse){
     getError();
     rManager::bindFBO(gameWorld);
     rManager::RuseShader(gameWorld);
+   	//adding wiggle
+	GLfloat offset = __cycle_num;
+	sendGLfloat("wiggle",offset,gameWorld);
     sendShader();
     getError();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -176,7 +180,6 @@ void drawFrame(bool reset_mouse){
     Draw_Calls.clear();
     glBindFramebuffer(GL_FRAMEBUFFER,0);
     //rManager::bindFBO(bufferWorld);
-    
     rManager::RuseShader(bufferWorld);
     bindTexture(gameWorld.bufer_object.attTexture,bufferWorld,"diffuse");
     drawMesh(buffer_model,glm::vec3(0.0f,0.0f,0.5f));
@@ -199,6 +202,7 @@ void drawFrame(bool reset_mouse){
     updateDisplay();
     
     error=glGetError();
+	__cycle_num++;
 }
 void sendCamera(glm::vec3 position,float thetax,float thetay){
     getError();
