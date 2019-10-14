@@ -164,7 +164,7 @@ void drawFrame(bool reset_mouse){
     rManager::bindFBO(gameWorld);
     rManager::RuseShader(gameWorld);
    	//adding wiggle
-	GLfloat offset = __cycle_num;
+	GLfloat offset = __cycle_num%100;
 	sendGLfloat("wiggle",offset,gameWorld);
     sendShader();
     getError();
