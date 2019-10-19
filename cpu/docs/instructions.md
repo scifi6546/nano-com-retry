@@ -23,6 +23,7 @@ opcode format:
 Use         Opcode
 constant?
 ```
+The invalid instruction is reserved as 0b01111111 and 0b11111111
 ## Instruction listing
 | Name    | Opcode |
 ----------------------

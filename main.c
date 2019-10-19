@@ -1,7 +1,7 @@
 #include "mmu.h"
 #include "bus.h"
 #include "gpu/gpu.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include <unistd.h>
 struct bus SYSTEM_BUS={0,0};
 struct ram_bus MEMORY_BUS={0,0,0};
