@@ -18,10 +18,11 @@ struct registers{
 	char io =0;
 	char sp =0;
 	char so =0;
-}
+};
 struct registers current_reg;
 void boot_cpu(){
 }
+short ram_read();
 void cpu_tick(struct bus *sys_bus,struct ram_bus *in){
 	if(next_stage==OPCODE_READ){
 		//read first opcode from memory
