@@ -1,4 +1,5 @@
 ## registers
+each register has a size of 16 bits.
 | Name | Full Name| Opcode (bin)   |
 ------------------------------------
 | r0   | general register 0  | 000 |
@@ -9,6 +10,12 @@
 | io   | Instruction offset  | 101 |
 | sp   | Stack Pointer       | 110 |
 | so   | Stack Offset        | 111 |
+## Ofset:
+each register has a corresponding to a matching 
+offset register. An instruction is calculated by
+```
+address=offset<<16+register
+```
 ## Instruction format
 ```
 ---------------------------------------------------------------       -----------------------------------------
@@ -23,6 +30,7 @@ opcode format:
 Use         Opcode
 constant?
 ```
+if use constant is 1 than a constant will be used. eg ```mov r0,0x5```
 The invalid instruction is reserved as 0b01111111 and 0b11111111
 ## Instruction listing
 | Name    | Opcode |
