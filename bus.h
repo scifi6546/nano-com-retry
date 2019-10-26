@@ -7,7 +7,7 @@ struct bus{
 };
 struct ram_bus{
 	short data_bus;
-	short address_bus;
+	unsigned int address_bus;
 	char device_select;
 	char WRITE_OR_READ;
 };

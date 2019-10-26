@@ -138,7 +138,7 @@ which device can write to the system bus using the DSB. Next the availible devic
 clock cycle every other device reads from the system bus and the process repeats.
 
 # How does the ram bus work?
-The ram bus has 4 lanes. A 8bit device select, a 16 bit address write and a 16 bit data write and a write type.
+The ram bus has 4 lanes. A 8bit device select, a 20 bit address write and a 16 bit data write and a write type.
 ## 1.Device select
 	The mmu writes the selected device id to the device select bus.
 ## 2. Address write

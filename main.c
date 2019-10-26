@@ -6,6 +6,7 @@
 struct bus SYSTEM_BUS={0,0};
 struct ram_bus MEMORY_BUS={0,0,0};
 int main(){
+	mmu_boot();
 	boot_cpu();
 	boot_gpu();
 	while(0==0){
