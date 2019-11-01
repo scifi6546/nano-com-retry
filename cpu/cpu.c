@@ -78,13 +78,15 @@ void boot_cpu(){
 short ram_read();
 void cpu_tick(struct bus *sys_bus,struct ram_bus *in){
 	unsigned char data;
+	unsigned int temp_addr = io<<0x10;
+	temp_addr+=ip;
 	switch(memory_stage){	
 		case DEVICE_SELECT:
 			memory_stage=ADDRESS_WRITE;	
 			return;
 		case ADDRESS_WRITE:
-			in->address_bus=ip+io<<0x10;
-			in->WRITE_OR_READ=1;
+			in->address_bus=temp_addr;
+			in->WRITE_OR_READ=READ;
 			memory_stage=MMU_READ;
 			return;
 		case MMU_READ:

@@ -139,12 +139,12 @@ clock cycle every other device reads from the system bus and the process repeats
 
 # How does the ram bus work?
 The ram bus has 4 lanes. A 8bit device select, a 20 bit address write and a 16 bit data write and a write type.
-## 1.Device select
+## 0.Device select
 	The mmu writes the selected device id to the device select bus.
-## 2. Address write
+## 1. Address write
 	the selected but then writes the type of operation to write type lane. If write than put 0, if read put 1
 	If writing then the client puts the data to write into the data bus.
-## 3. MMU Read
+## 2. MMU Read
 	The mmu then reads from the device select data bus and address bus andwrites to the databus if memory is to be read.
-## 4. Data Read
+## 3. Data Read
 	The client device then reads from the address bus.

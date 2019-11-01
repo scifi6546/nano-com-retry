@@ -4,7 +4,7 @@
 int counter=0;
 char selected_device=0x0;
 char read_or_write=0x0;
-short address=0x0;
+unsigned int address=0x0;
 short data_write = 0x0;
 unsigned char ram[RAM_MAX_ADDRESSIBLE+1];
 void mmu_boot(){
