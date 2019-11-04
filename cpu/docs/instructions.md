@@ -46,4 +46,5 @@ The invalid instruction is reserved as 0b01111111 and 0b11111111
 | or      | 0x8    |
 | xor     | 0x9    |
 | and     | 0xA    |
+| out     | 0xB    |
 

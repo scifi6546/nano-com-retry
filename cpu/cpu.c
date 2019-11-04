@@ -32,19 +32,14 @@ unsigned char cpu_operand1 = 0x0;
 #define AND  0x0A
 char cpu_current_stage = 0x0;
 char cpu_memory_stage=DEVICE_SELECT;
-struct registers{
-
-	unsigned short r0 =0;
-	unsigned short r0o=0;
-	unsigned short r1 =0;
-	unsigned short r1o=0;
-	unsigned short ip =0;
-	unsigned short io =0;
-	unsigned short sp =0;
-	unsigned short so =0;
-
-}
-struct registers _cpu_registers;
+unsigned short r0 =0;
+unsigned short r0o=0;
+unsigned short r1 =0;
+unsigned short r1o=0;
+unsigned short ip =0;
+unsigned short io =0;
+unsigned short sp =0;
+unsigned short so =0;
 void print_registers();
 void print_instruction();
 void execute_instruction(){
@@ -71,10 +66,10 @@ void print_instruction(){
 	printf("instruction executed: 0x%x\t0x%x\t0x%x\n",cpu_opcode,cpu_operand0,cpu_operand1);
 }
 void print_registers(){
-	printf("r0: 0x%x\tr0o: 0x%x\n",_cpu_registers.r0,_cpu_registers.r0o);
-	printf("r1: 0x%x\tr1o: 0x%x\n",_cpu_registers.r1,_cpu_registers.r1o);
-	printf("ip: 0x%x\tio:  0x%x\n",_cpu_registers.ip,_cpu_registers.io);
-	printf("sp: 0x%x\tso:  0x%x\n",_cpu_register.sp,_cpu_register.so);
+	printf("r0: 0x%x\tr0o: 0x%x\n",r0,r0o);
+	printf("r1: 0x%x\tr1o: 0x%x\n",r1,r1o);
+	printf("ip: 0x%x\tio:  0x%x\n",ip,io);
+	printf("sp: 0x%x\tso:  0x%x\n",sp,so);
 
 }
 void boot_cpu(){
@@ -85,9 +80,9 @@ void cpu_tick(struct bus *sys_bus,struct ram_bus *in){
 	unsigned char data;
 	unsigned int temp_addr = io<<0x10;
 	temp_addr+=ip;
-	switch(memory_stage){	
+	switch(cpu_memory_stage){	
 		case DEVICE_SELECT:
-			memory_stage=ADDRESS_WRITE;	
+			cpu_memory_stage=ADDRESS_WRITE;	
 			return;
 		case ADDRESS_WRITE:
 			in->address_bus=temp_addr;
@@ -101,34 +96,33 @@ void cpu_tick(struct bus *sys_bus,struct ram_bus *in){
 			data = in->data_bus;
 			cpu_memory_stage=DEVICE_SELECT;
 	}
-	switch(current_stage){
+	switch(cpu_current_stage){
 		case OPCODE_READ:
-			opcode = data;
+			cpu_opcode = data;
 			cpu_current_stage=OPRAND0_READ;
 			ip++;
 			break;
 		//read first opcode from memory
 		case OPRAND0_READ:
-			operand0=data;
-			if(opcode>>0x7==0){
+			cpu_operand0=data;
+			if(cpu_opcode>>0x7==0){
 				execute_instruction();
-				current_stage=OPCODE_READ;
+				cpu_current_stage=OPCODE_READ;
 				break;
 			}
-			current_stage=OPARAND1_READ;
+			cpu_current_stage=OPARAND1_READ;
 			ip++;
 			break;
 		//read 0th operand from memory and if opcode&0x80==0 execute instruction
 
 		case OPARAND1_READ:
-			operand1=data;
+			cpu_operand1=data;
 			execute_instruction();
-			current_stage=OPCODE_READ;
-			ip++;
+			cpu_current_stage=OPCODE_READ;
 			break;
 		//read 1st operand from memory and execute
 	}
-	memory_stage=DEVICE_SELECT;
+	cpu_memory_stage=DEVICE_SELECT;
 
 
 }

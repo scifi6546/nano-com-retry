@@ -7,6 +7,8 @@ char read_or_write=0x0;
 unsigned int address=0x0;
 short data_write = 0x0;
 unsigned char ram[RAM_MAX_ADDRESSIBLE+1];
+
+
 void mmu_boot(){
 	FILE *p = fopen("boot.rom","r");
 	for(int i =0;i<RAM_MAX_ADDRESSIBLE+1;i++){
@@ -16,10 +18,8 @@ void mmu_boot(){
 		else
 			ram[i]=0;
 	}
+	dump_ram();
 	fclose(p);
-}
-void print_ram(){
-
 }
 void device_select(struct ram_bus* in){
 	selected_device=0x0;

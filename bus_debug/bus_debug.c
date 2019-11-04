@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "../bus.h"
+#include <iostream>
+#include <string>
 void boot_dbg(){
 
 }
@@ -23,6 +25,8 @@ void dbg_tick(struct bus *in, struct ram_bus *foo){
 		case 3:
 			mem_dbg_data=foo->data_bus;
 			printf("address: %x data_returned: %x\n",mem_dbg_address,mem_dbg_data);
+			std::string foo;
+			std::cin>>foo;
 			break;
 	}
 	index++;
