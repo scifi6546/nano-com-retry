@@ -18,7 +18,6 @@ void mmu_boot(){
 		else
 			ram[i]=0;
 	}
-	dump_ram();
 	fclose(p);
 }
 void device_select(struct ram_bus* in){
