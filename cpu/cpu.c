@@ -6,15 +6,19 @@
 #define RET 0x03
 unsigned char cpu_opcode=0xFF;
 unsigned char cpu_operand0 = 0x0;
-unsigned char cpu_operand1 = 0x0;
+unsigned char temp_mod_char=0x0;
+unsigned short cpu_operand1 = 0x0;
 unsigned char cpu_register_pointed_to=0x0;//data pointed to by cpu register only used when memory access
                                           //specified
 unsigned char* to_modify=&cpu_opcode;
+//contains data of derefrenced register
+unsigned short derefrenced_reg_data;
 //cpu memory stages
 #define OPCODE_READ 0x00
 #define OPRAND0_READ 0x01
-#define OPARAND1_READ 0x02
-#define REGISTER_DEREFRENCE_UPPER 0x3
+#define OPERAND1_READ_UPPER 0x2
+#define OPERAND1_READ_LOWER 0x3
+#define REGISTER_DEREFRENCE_UPPER 0x4
 #define REGISTER_DEREFRENCE_LOWER 0x4
 
 
@@ -57,6 +61,8 @@ unsigned short ip =0;
 unsigned short io =0;
 unsigned short sp =0;
 unsigned short so =0;
+unsigned short addr_register = 0;
+unsigned short addr_register_offset=0;
 //gets pointer to register from register opcode
 unsigned short* get_register_addr(unsigned char register_code){
 	switch(register_code){
@@ -79,6 +85,18 @@ unsigned short* get_register_addr(unsigned char register_code){
 	}
 
 }
+unsigned short* get_regiser_offset(unsigned char register_code){
+	switch(register_code){
+		case R0:
+		      return &r0o;
+		case R1:
+		      return &r1o;
+		case IP:
+		      return &io;
+		case SP:
+			return &so;
+	}
+}
 void print_registers();
 void print_instruction();
 void execute_instruction(){
@@ -94,8 +112,15 @@ void execute_instruction(){
 			break;
 		case JMP:
 			if(cpu_opcode>>0x7==0x1){
-				ip = cpu_operand1;
-				printf("jumped\n");
+				if(derefrenced_reg_data==0){
+					cpu_current_stage=REGISTER_DEREFRENCE_UPPER;
+					addr_register=*get_register_addr(cpu_operand0);
+					addr_register_offset=*get_regiser_offset(cpu_operand0);
+					printf("jumped\n");
+				}else{
+					ip=derefrenced_reg_data;
+					derefrenced_reg_data=0x0;
+				}
 			}else{
 				printf("seen: %x",cpu_opcode>>0x7);
 				printf("todo memory_access\n");
@@ -128,8 +153,13 @@ short ram_read();
 //cpu_current_stage keeps track of whick part of instruction decoding
 //the processer is doing.
 void cpu_tick(struct bus *sys_bus,struct ram_bus *in){
-	unsigned int temp_addr = io<<0x10;
-	temp_addr+=ip;
+	if(cpu_current_stage!=REGISTER_DEREFRENCE_UPPER && 
+			cpu_current_stage!=REGISTER_DEREFRENCE_LOWER){
+		addr_register=ip;		
+		addr_register_offset=io;
+	}
+	unsigned int temp_addr = addr_register_offset<<0x10;
+	temp_addr+=addr_register;
 	switch(cpu_memory_stage){	
 		case DEVICE_SELECT:
 			cpu_memory_stage=ADDRESS_WRITE;	
@@ -156,27 +186,28 @@ void cpu_tick(struct bus *sys_bus,struct ram_bus *in){
 		case OPRAND0_READ:
 			//if use constant==0 derefrence address
 			//todo get memory pointers working.
-			if(cpu_opcode>>0x7==0){
-				cpu_current_stage=REGISTER_DEREFRENCE_UPPER;
-				unsigned short reg = cpu_register_pointed_to(to_modify[0]);
-				reg=0;
-				to_modify=&cpu_opcode;
-				break;
-			}
-			cpu_current_stage=OPARAND1_READ;
-			to_modify=&cpu_operand1;
+			cpu_current_stage=OPERAND1_READ_UPPER;
+			to_modify=&temp_mod_char;
 			ip++;
 			break;
 		//read 0th operand from memory and if opcode&0x80==0 execute instruction
 
-		case OPARAND1_READ:
+		case OPERAND1_READ_UPPER:
+			cpu_operand1=temp_mod_char;
+			cpu_operand1=cpu_operand1<<0x8;
+			cpu_current_stage=OPERAND1_READ_LOWER;
+			ip++;
+			break;
+		case OPERAND1_READ_LOWER:
+			cpu_operand1+=temp_mod_char;
 			execute_instruction();
 			cpu_current_stage=OPCODE_READ;
 			to_modify=&cpu_opcode;
 			break;
-		case REGISTER_DEREFRENCE:
+		case REGISTER_DEREFRENCE_UPPER:
 			execute_instruction();
 			break;
+
 
 
 		//read 1st operand from memory and execute
