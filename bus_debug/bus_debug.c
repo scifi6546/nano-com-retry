@@ -11,7 +11,11 @@ unsigned char mem_dbg_selected_device;
 unsigned int mem_dbg_address;
 unsigned char mem_dbg_read_or_write;
 unsigned short mem_dbg_data;
+char debug=1;
 void dbg_tick(struct bus *in, struct ram_bus *foo){
+	if(debug==1){
+		return;
+	}
 	switch (index%4){
 		case 0:
 			mem_dbg_selected_device=foo->device_select;
