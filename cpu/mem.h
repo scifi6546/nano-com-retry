@@ -7,3 +7,5 @@ struct mem_result{
 };
 struct mem_result load_mem(struct ram_bus *bus,unsigned int address);
 struct mem_result write_mem(struct ram_bus *bus,unsigned int address,unsigned short data);
+//called at start of every bus tick. 
+void tick_mem();

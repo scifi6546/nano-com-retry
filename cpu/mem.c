@@ -5,8 +5,15 @@
 #define ADDRESS_WRITE 0x2
 #define MMU_READ      0x3
 #define DATA_READ     0x4
+//counts number of memory ops in a tick
+char MEM_OPS_TICK=0;
 unsigned char memory_stage=DEVICE_SELECT;
 struct mem_result load_mem(struct ram_bus *bus,unsigned int address){
+	if(MEM_OPS_TICK!=0){
+		add_log(ERROR,"RUNNING 2 MEM OPS in 1 CYCLE!","");
+	}else{
+		MEM_OPS_TICK++;	
+	}
 	if(memory_stage==DEVICE_SELECT){
 		memory_stage=ADDRESS_WRITE;
 	}else if(memory_stage==ADDRESS_WRITE){
@@ -16,13 +23,10 @@ struct mem_result load_mem(struct ram_bus *bus,unsigned int address){
 	}else if(memory_stage==MMU_READ){
 		memory_stage=DATA_READ;
 	}else if(memory_stage==DATA_READ){
-		printf("data read\n");
 		memory_stage=DEVICE_SELECT;
 		struct mem_result res;
 		res.data = bus->data_bus;
 		res.progress=RES_DONE;
-		printf("returning: 0x%x\n",res.progress);
-		printf("output data: 0x%x\n",res.data);
 		return res;
 	}
 	struct mem_result res;
@@ -31,6 +35,11 @@ struct mem_result load_mem(struct ram_bus *bus,unsigned int address){
 }
 //not done
 struct mem_result write_mem(struct ram_bus *bus,unsigned int address,unsigned short data){
+	if(MEM_OPS_TICK!=0){
+		add_log(ERROR,"RUNNING 2 MEM OPS in 1 CYCLE!","");
+	}else{
+		MEM_OPS_TICK++;	
+	}
 	if(memory_stage==DEVICE_SELECT){
 		memory_stage=ADDRESS_WRITE;
 	}else if(memory_stage==ADDRESS_WRITE){
@@ -48,4 +57,11 @@ struct mem_result write_mem(struct ram_bus *bus,unsigned int address,unsigned sh
 	}
 	struct mem_result res;
 	return res;
+}
+void tick_mem(){
+	if(MEM_OPS_TICK!=0){
+		MEM_OPS_TICK=0;
+	}else{
+		add_log(ERROR,"RAM did not tick!","");
+	}
 }

@@ -645,6 +645,7 @@ struct cpu_state{
 struct cpu_state STATE;
 unsigned int TEMP_INSTRUCTION;
 void tick_micro_ins(struct bus *sys_bus,struct ram_bus *in){
+	tick_mem();
 	if(STATE.main_task==INSTRUCTION_DECODE){
 		if(STATE.sub_task==START){
 		    struct mem_result res = load_mem(in,get_register(IP));	
