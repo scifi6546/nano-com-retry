@@ -38,8 +38,8 @@ void bus_read(struct ram_bus *in){
 }
 void bus_write(struct ram_bus *in){
 	if(read_or_write==READ){
-		printf("address red: 0x%x\n",address);
-		printf("writing to bus: 0x%x\n",ram[address]);
+		//printf("address red: 0x%x\n",address);
+		//printf("writing to bus: 0x%x\n",ram[address]);
 		in->data_bus=ram[address];	
 	}
 	if(read_or_write==WRITE){

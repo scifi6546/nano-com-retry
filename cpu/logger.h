@@ -4,7 +4,9 @@ struct log{
 	char * log_contents;
 	#define ERROR 0
 	#define PROG_FLOW 1
-	#define INFO 2
+	#define CPU_STATE 2
+	#define INFO 3
+
 	int severity;
 };
 void add_log(struct log in);

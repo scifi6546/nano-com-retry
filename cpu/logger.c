@@ -1,5 +1,7 @@
 #include "logger.h"
 #include <stdio.h>
+const int MAX_LOG=INFO;
+const char INTERACTIVE=1;
 void add_log(int severity,char *title,char* data){
 	struct log l;
 	l.title=title;
@@ -9,5 +11,14 @@ void add_log(int severity,char *title,char* data){
 
 }
 void add_log(struct log in){
-	printf("%i %s %s\n",in.severity,in.title,in.log_contents);
+	if(in.severity<=MAX_LOG){
+		if(in.severity==ERROR){
+			printf("\e[31mERROR! %i %s %s\n\e[0m ",in.severity,in.title,in.log_contents);
+		}else{
+			printf("%i %s %s\n",in.severity,in.title,in.log_contents);
+		}
+		if(INTERACTIVE==1){
+			char f=getchar();
+		}
+	}
 }

@@ -6,7 +6,9 @@
 #define MMU_READ      0x3
 #define DATA_READ     0x4
 //counts number of memory ops in a tick
-char MEM_OPS_TICK=0;
+//set to 1 initially so that system does not error out
+//on boot
+char MEM_OPS_TICK=1;
 unsigned char memory_stage=DEVICE_SELECT;
 struct mem_result load_mem(struct ram_bus *bus,unsigned int address){
 	if(MEM_OPS_TICK!=0){

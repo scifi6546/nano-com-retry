@@ -39,9 +39,9 @@ The invalid instruction is reserved as 0b01111111 and 0b11111111
 ## Instruction listing
 | Name    | Opcode | Const Opcode |  description   |
 -------------------------------------
-| mov     | 0x0    | 
-| jmp     | 0x1    |
-| call    | 0x2    |
+| mov     | 0x0    | 0x80         | moves data
+| jmp     | 0x1    | 0x81         | sets ip to register
+| call    | 0x2    | 0x82
 | ret     | 0x3    |
 | push    | 0x4    |
 | pop     | 0x5    |
@@ -49,7 +49,7 @@ The invalid instruction is reserved as 0b01111111 and 0b11111111
 | or      | 0x7    |
 | xor     | 0x8    |
 | and     | 0x9    |
-| out     | 0xA    |
+| out     | 0xA    | | puts data in src reg onto bus dest reg is the device id
 
 ## example program
 this program puts the cpu into an infinte loop
