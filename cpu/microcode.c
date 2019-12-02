@@ -431,16 +431,17 @@ void decode_instruction(unsigned int instruction){
 	}
 	//jmp [reg]
 	if(opcode==0x01){
+		add_log(INFO,"decode instruction","jump reg");
 		//if ptr
-		if(src_reg&0b1000==0b1000){
+		if(src_reg&0b100==0b100){
 			//LOAD ip src_reg
 			struct microins ins;
 				ins.opcode=LOAD;
 				ins.source=src_reg;
 				ins.destination=IP;
 			push_microins(&MICRO_STACK,ins);
-		}
-		if(src_reg&0b1000==0b0000){
+		}else{
+		//if not ptr
 			//REG_MOV ip src_reg
 			struct microins ins;
 				ins.opcode=REG_MOV;
