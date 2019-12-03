@@ -1,5 +1,5 @@
 #include "mem.h"
-#include "logger.h"
+#include "../logger.h"
 #include "bus_io.h"
 #include <stdio.h>
 //How will it work?
@@ -303,6 +303,7 @@ char execute_instruction(struct bus *sys_bus,struct ram_bus *ram,char can_mem){
 			return execute_instruction(sys_bus,ram,can_mem);
 		}else if(ins.opcode==COMMIT_OUT){
 			struct bus_result res = put_bus(sys_bus);
+			skip_cycle();
 			if(res.progress==BUS_RES_DONE){
 				pop_top_microins(&MICRO_STACK);
 				return execute_instruction(
@@ -931,8 +932,14 @@ void decode_instruction(unsigned int instruction){
 	//out
 	if(opcode==0xB|| opcode==0x8B){
 
+		//COMMIT_OUT
+		//ADD_C IP 4
 		struct microins ins;
 			ins.opcode=COMMIT_OUT;
+		push_microins(&MICRO_STACK,ins);
+			ins.opcode=ADD_C;
+			ins.source=4;
+			ins.destination=IP;
 		push_microins(&MICRO_STACK,ins);
 	}
 
@@ -964,6 +971,7 @@ void tick_micro_ins(struct bus *sys_bus,struct ram_bus *in){
 	tick_mem();
 	tick_bus();
 	if(STATE.main_task==INSTRUCTION_DECODE){
+		add_log(INFO,"tick_micro_ins","STATE.main_task=INSTRUCTION_DECODE");
 		if(STATE.sub_task==START){
 		    struct mem_result res = load_mem(in,get_register(IP));	
 			STATE.sub_task=MEM_LOAD_1ST_SHORT;

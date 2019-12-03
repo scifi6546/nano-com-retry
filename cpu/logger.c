@@ -1,7 +1,7 @@
-#include "logger.h"
+#include "../logger.h"
 #include <stdio.h>
-const int MAX_LOG=INFO;
-const char INTERACTIVE=1;
+const int MAX_LOG=BUS_IO;
+const char INTERACTIVE=0;
 void add_log(int severity,char *title,char* data){
 	struct log l;
 	l.title=title;

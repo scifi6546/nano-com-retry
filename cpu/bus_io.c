@@ -1,4 +1,6 @@
 #include "bus_io.h"
+#include "../logger.h"
+#include <stdio.h>
 #define BUFFER_SIZE 100
 unsigned int num_ops_in_tick=0;
 int buffer_index =-1;
@@ -19,12 +21,21 @@ void buffer_bus(struct bus *in,unsigned short data,
 }
 struct bus_result put_bus(struct bus *bus){
 	struct bus_result res;
+	if(buffer_index<0){
+		res.progress=BUS_RES_DONE;
+		return res;
+
+	}
 	if(num_ops_in_tick==0){
 		if(buffer_index>=0){
 			bus->data=bus_buffer[buffer_index].data;
 			bus->device_select=bus_buffer[buffer_index].device_id;
 			num_ops_in_tick++;
 			buffer_index--;
+			char buffer[80];
+			sprintf(buffer,"putting 0x%x on bus",
+					bus_buffer[buffer_index].data);
+			add_log(BUS_IO,"put_bus",buffer);
 			if(buffer_index<0){
 				res.progress=BUS_RES_DONE;
 				return res;
