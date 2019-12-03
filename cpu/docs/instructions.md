@@ -49,7 +49,8 @@ The invalid instruction is reserved as 0b01111111 and 0b11111111
 | or      | 0x7    |
 | xor     | 0x8    |
 | and     | 0x9    |
-| out     | 0xA    | | puts data in src reg onto bus dest reg is the device id
+| bout    | 0xA    | | buffers data to be put onto the system bus,dest is device id ,src is the data to be buffered
+| out     | 0xB
 
 ## example program
 this program puts the cpu into an infinte loop

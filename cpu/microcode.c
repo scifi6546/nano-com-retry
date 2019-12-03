@@ -1,5 +1,6 @@
 #include "mem.h"
 #include "logger.h"
+#include "bus_io.h"
 #include <stdio.h>
 //How will it work?
 #define R0  0x0
@@ -126,6 +127,9 @@ struct microins{
 	#define DECR_REG 0x7 //decrements src reg by 1
 	#define ADD_REG 0x8 //adds src to dest and writes back to dest
 	#define ADD_C 0x9 //adds constant to dest and writes to res to dest
+	#define BUFF_OUT_REG 0xA//puts data onto a buffer to be written
+	#define BUFF_OUT_C 0xB//puts data onto a buffer to be written
+	#define COMMIT_OUT 0xC
 	unsigned short opcode=0;
 	unsigned short source=0;
 	unsigned short destination=0;
@@ -283,6 +287,30 @@ char execute_instruction(struct bus *sys_bus,struct ram_bus *ram,char can_mem){
 			pop_top_microins(&MICRO_STACK);
 			return execute_instruction(sys_bus,ram,can_mem);
 		}
+		else if(ins.opcode==BUFF_OUT_REG){
+			u16 data= get_register(ins.source);
+			u16 dev_id = get_register(ins.destination);
+			buffer_bus(sys_bus,data,(u8) dev_id);
+			pop_top_microins(&MICRO_STACK);
+			return execute_instruction(sys_bus,ram,can_mem);
+
+		}else if(ins.opcode==BUFF_OUT_C){
+			u16 data= ins.source;
+			u16 dev_id = get_register(ins.destination);
+
+			buffer_bus(sys_bus,data,(u8) dev_id);
+			pop_top_microins(&MICRO_STACK);
+			return execute_instruction(sys_bus,ram,can_mem);
+		}else if(ins.opcode==COMMIT_OUT){
+			struct bus_result res = put_bus(sys_bus);
+			if(res.progress==BUS_RES_DONE){
+				pop_top_microins(&MICRO_STACK);
+				return execute_instruction(
+					sys_bus,ram,can_mem);
+			}else{
+				return NOT_DONE_EXEC;
+			}
+		}
 	}else{
 		add_log(ERROR,"execute instruction","null instruction found");
 		return DONE_EXEC;
@@ -296,12 +324,12 @@ void decode_instruction(unsigned int instruction){
 	add_log(INFO,"decode_instruction",s);
 
 	//upcode is the upper 8 bytes of the instruct
-	u32 temp = instruction>>0x10;
+	u32 temp = instruction>>0x18;
 	u8 opcode = temp;	
 	sprintf(s,"interperted opcode: 0x%x",opcode);
 	add_log(INFO,"decode_instruction",s);
 	//getting the second byte
-	u8 regs = (instruction&0x0F00)>>0x10;
+	u8 regs = (instruction>>0x10)&0x00FF;
 	u16 constant = instruction&0x00FF;
 	//move reg into reg
 	u8 dest_reg = (regs & 0b11110000)>>0x4;
@@ -619,6 +647,7 @@ void decode_instruction(unsigned int instruction){
 			push_microins(&MICRO_STACK,ins);
 		}
 	}if(opcode==0x06){
+		add_log(INFO,"decode_instruction","add_reg");
 		//ADD
 		if(src_reg&0b1000==0b1000){
 			//src is ptr
@@ -628,6 +657,7 @@ void decode_instruction(unsigned int instruction){
 				//LOAD STRATCH_REGISTER2 dest;
 				//ADD STRATCH_REGISTER2 STRATCH_REGISTER
 				//MEM_WRITE_R dest_reg STRATCH_REGISTER
+				//ADD_C IP 4
 				struct microins ins;
 					ins.opcode=LOAD;
 					ins.source=src_reg;
@@ -641,15 +671,21 @@ void decode_instruction(unsigned int instruction){
 					ins.source=STRATCH_REGISTER;
 					ins.destination=STRATCH_REGISTER2;
 				push_microins(&MICRO_STACK,ins);
-					ins.source=MEM_WRITE_R;
+					ins.opcode=MEM_WRITE_R;
 					ins.source=STRATCH_REGISTER2;
 					ins.destination=dest_reg;
 				push_microins(&MICRO_STACK,ins);
-			}if(dest_reg&0b1000==0b0000){
+					ins.opcode=ADD_C;
+					ins.source=4;
+					ins.destination=IP;
+				push_microins(&MICRO_STACK,ins);
+					
+			}else{
 				//dest is not ptr
 				//LOAD STRATCH_REGISTER src
 				//ADD dest_reg STRATCH_REGISTER
 				//dest is not ptr
+				//ADD_C IP 4
 				struct microins ins;
 					ins.opcode=LOAD;
 					ins.source=src_reg;
@@ -659,10 +695,13 @@ void decode_instruction(unsigned int instruction){
 					ins.source=STRATCH_REGISTER;
 					ins.destination=dest_reg;
 				push_microins(&MICRO_STACK,ins);
+					ins.opcode=ADD_C;
+					ins.source=4;
+					ins.destination=IP;
+				push_microins(&MICRO_STACK,ins);
 
 			}
-		}
-		if(src_reg&0b1000==0b0000){
+		}else{
 			//src is not ptr
 			
 			if(dest_reg&0b1000==0b1000){
@@ -670,6 +709,7 @@ void decode_instruction(unsigned int instruction){
 				//LOAD STRATCH_REGISTER dest_reg
 				//ADD STRATCH_REGISTER src_reg
 				//MEM_WRITE_R dest_reg STRATCH_REGISTER
+				//ADD_C IP 4
 				struct microins ins;
 					ins.opcode=LOAD;
 					ins.source=dest_reg;
@@ -683,14 +723,23 @@ void decode_instruction(unsigned int instruction){
 					ins.source=STRATCH_REGISTER;
 					ins.destination=dest_reg;
 				push_microins(&MICRO_STACK,ins);
+					ins.opcode=ADD_C;
+					ins.source=4;
+					ins.destination=IP;
+				push_microins(&MICRO_STACK,ins);
 
-			}if(dest_reg&0b1000==0b0000){
+			}else{
 				//dest is not ptr
 				//ADD dest_reg src_reg
+				//ADD_C IP 4
 				struct microins ins;
 					ins.opcode=ADD_REG;
 					ins.source=src_reg;
 					ins.destination=dest_reg;
+				push_microins(&MICRO_STACK,ins);
+					ins.opcode=ADD_C;
+					ins.source=4;
+					ins.destination=IP;
 				push_microins(&MICRO_STACK,ins);
 
 			}
@@ -698,12 +747,13 @@ void decode_instruction(unsigned int instruction){
 	}
 	if(opcode==0x86){
 		//add constant
-		if(dest_reg&0b100){
+		if(dest_reg&0b100==0b100){
 			//dest is ptr
 			//LOAD STRATCH_REGISTER dest_reg
 			//ADD_C STRATCH_REGISTER constant
 			//MEM_WRITE_R dest_reg STRATCH_REGISTER
 			//ADD_C IP 4
+			add_log(INFO,"decode_instruction","decoding add to ptr");
 			struct microins ins;
 				ins.opcode=LOAD;
 				ins.source=dest_reg;
@@ -723,6 +773,8 @@ void decode_instruction(unsigned int instruction){
 			push_microins(&MICRO_STACK,ins);
 				
 		}else{
+			add_log(INFO,"decode_instruction",
+					"decoding add to register");
 			//dest is not ptr
 			//
 			//ADD_C dest_reg constant
@@ -739,26 +791,149 @@ void decode_instruction(unsigned int instruction){
 		}
 	}
 	
-	//out
+	//bout
 	if(opcode==0xA){
 		//src is ptr
 		if(src_reg&0b1000==0b1000){
 			if(dest_reg&0b1000==0b1000){
+				add_log(INFO,"decode_instruction",
+					"bufferring 2 ptrs");
 				//dest is ptr
-			}
-			if(dest_reg&0b1000==0b000){
+				//LOAD STRATCH_REGISTER dest_reg
+				//LOAD STRATCH_REGISTER2 src_reg
+				//BUFF_OUT_REG STRATCH_REGISTER STRATCH_REGISTER2
+				//ADD_C IP 4
+				
+				struct microins ins;
+					ins.opcode=LOAD;
+					ins.source=dest_reg;
+					ins.destination=STRATCH_REGISTER;
+				push_microins(&MICRO_STACK,ins);
+					ins.opcode=LOAD;
+					ins.source=src_reg;
+					ins.destination=STRATCH_REGISTER2;
+				push_microins(&MICRO_STACK,ins);
+					ins.opcode=BUFF_OUT_REG;
+					ins.source=STRATCH_REGISTER2;
+					ins.destination=STRATCH_REGISTER;
+				push_microins(&MICRO_STACK,ins);
+					ins.opcode=ADD_C;
+					ins.source=4;
+					ins.destination=IP;
+				push_microins(&MICRO_STACK,ins);
+
+			}else{
+				add_log(INFO,"decode_instruction",
+					"bufferring src ptr and dest not ptr");
 				//dest is not ptr
+
+				//LOAD STRATCH_REGISTER src_reg
+				//BUFF_OUT_REG dest_reg src_reg
+				//ADD_C IP 4
+				struct microins ins;
+					ins.opcode=LOAD;
+					ins.source=src_reg;
+					ins.destination=STRATCH_REGISTER;
+				push_microins(&MICRO_STACK,ins);
+					ins.opcode=BUFF_OUT_REG;
+					ins.source=STRATCH_REGISTER;
+					ins.destination=dest_reg;
+				push_microins(&MICRO_STACK,ins);
+					ins.opcode=ADD_C;
+					ins.source=4;
+					ins.destination=IP;
+				push_microins(&MICRO_STACK,ins);
+				
+
 			}
 		}
-		if(src_reg&0b1000==0){
+		else{
 			//src is not ptr
 			if(dest_reg&0b1000==0b1000){
+				add_log(INFO,"decode_instruction",
+					"bufferring src not ptr and dest is ptr");
 				//dest is ptr
+
+				//LOAD STRATCH_REGISTER dest_reg
+				//BUFF_OUT_REG STRATCH_REGISTER src_reg
+				//ADD_C IP 4
+				struct microins ins;
+					ins.opcode=LOAD;
+					ins.source=dest_reg;
+					ins.destination=STRATCH_REGISTER;
+				push_microins(&MICRO_STACK,ins);
+					ins.opcode=BUFF_OUT_REG;
+					ins.source=src_reg;
+					ins.destination=STRATCH_REGISTER;
+				push_microins(&MICRO_STACK,ins);
+					ins.opcode=ADD_C;
+					ins.source=4;
+					ins.destination=IP;
+				push_microins(&MICRO_STACK,ins);
+
+
 			}
-			if(dest_reg&0b1000==0b000){
+			else{
+				add_log(INFO,"decode_instruction",
+					"bufferring src not ptr and dest not ptr");
 				//dest is not ptr
+				//BUFF_OUT_REG dest_reg src_reg
+				//ADD_C IP 4
+				struct microins ins;
+					ins.opcode=BUFF_OUT_REG;
+					ins.source=src_reg;
+					ins.destination=dest_reg;
+				push_microins(&MICRO_STACK,ins);
+					ins.opcode=ADD_C;
+					ins.source=4;
+					ins.destination=IP;
+				push_microins(&MICRO_STACK,ins);
 			}
 		}
+	}
+	if(opcode==0x8A){
+		//buff_out constant
+		if(dest_reg&0b1000==0b1000){
+			//dest is ptr
+			//LOAD STRATCH_REGISTER dest_reg
+			//BUFF_OUT_REG STRATCH_REGISTER constant
+			//ADD_C IP 4
+			struct microins ins;
+				ins.opcode=LOAD;
+				ins.source=dest_reg;
+				ins.destination=STRATCH_REGISTER;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=BUFF_OUT_REG;
+				ins.source=constant;
+				ins.destination=STRATCH_REGISTER;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
+			push_microins(&MICRO_STACK,ins);
+
+		}else{
+			//BUFF_OUT_REG dest_reg constant
+			//ADD_C IP 4
+			//dest is not ptr
+			struct microins ins;
+				ins.opcode=BUFF_OUT_REG;
+				ins.source=constant;
+				ins.destination=dest_reg;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
+			push_microins(&MICRO_STACK,ins);
+		}
+
+	}
+	//out
+	if(opcode==0xB|| opcode==0x8B){
+
+		struct microins ins;
+			ins.opcode=COMMIT_OUT;
+		push_microins(&MICRO_STACK,ins);
 	}
 
 
@@ -787,6 +962,7 @@ unsigned int TEMP_INSTRUCTION;
 void tick_micro_ins(struct bus *sys_bus,struct ram_bus *in){
 	log_state();
 	tick_mem();
+	tick_bus();
 	if(STATE.main_task==INSTRUCTION_DECODE){
 		if(STATE.sub_task==START){
 		    struct mem_result res = load_mem(in,get_register(IP));	
@@ -798,12 +974,18 @@ void tick_micro_ins(struct bus *sys_bus,struct ram_bus *in){
 		    struct mem_result res = load_mem(in,get_register(IP));	
 			add_log(INFO,"starting to read first short\n","");
 			if(res.progress==RES_DONE){
-				TEMP_INSTRUCTION=res.data;
+
+				TEMP_INSTRUCTION=(unsigned int) res.data;
+				char buffer[80];
+				sprintf(buffer,"first half (raw): 0x%x",res.data);
+				add_log(INFO,"Read 1/2 of Instruction",buffer);
 				//setting the upper 0x10 bytest to the first half of the instruction
-				TEMP_INSTRUCTION=TEMP_INSTRUCTION<<0x10;
+				TEMP_INSTRUCTION<<=0x10;
 				STATE.sub_task=MEM_LOAD_2ND_SHORT;
 				STATE.main_task=INSTRUCTION_DECODE;
-				add_log(INFO,"Read 1/2 of Instruction","");
+				sprintf(buffer,"first half: 0x%x",TEMP_INSTRUCTION);
+				add_log(INFO,"Read 1/2 of Instruction",buffer);
+				
 				return;
 			}
 			return;
@@ -815,7 +997,12 @@ void tick_micro_ins(struct bus *sys_bus,struct ram_bus *in){
 				//setting the upper 0x10 bytest to the first half of the instruction
 				STATE.main_task=INSTRUCTION_EXECUTE;
 				STATE.sub_task=START;
+				char buffer[80];
+				sprintf(buffer,
+					"Read full instruction: 0x%x\n",
+					TEMP_INSTRUCTION);
 				add_log(INFO,"Read full Instruction","");
+
 				decode_instruction(TEMP_INSTRUCTION);
 				char status = execute_instruction(sys_bus,in,FALSE);
 				if(status==DONE_EXEC){

@@ -41,10 +41,12 @@ void bus_write(struct ram_bus *in){
 		//printf("address red: 0x%x\n",address);
 		//printf("writing to bus: 0x%x\n",ram[address]);
 		in->data_bus=ram[address];	
+		in->data_bus<<=0x8;
+		in->data_bus+=ram[address+1];	
 	}
 	if(read_or_write==WRITE){
 
-		ram[address&0xFFFFFF0000000000]=data_write;
+		ram[address&!0xFFFFFF0000000000]=data_write;
 	}
 }
 //systembus not needed but used for completness sake

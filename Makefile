@@ -9,10 +9,11 @@ main:
 	g++ -c $(LIBS) $(CFLAGS) cpu/microcode.c -o cpu/microcode.o
 	g++ -c $(LIBS) $(CFLAGS) cpu/mem.c -o cpu/mem.o
 	g++ -c $(LIBS) $(CFLAGS) cpu/logger.c -o cpu/logger.o
+	g++ -c $(LIBS) $(CFLAGS) cpu/bus_io.c -o cpu/bus_io.o
 	g++ -c $(LIBS) $(CFLAGS) bus_debug/bus_debug.c -o bus_debug/bus_debug.o
 	g++ gpu/gpu.o gpu/rendering_lib/shader.o gpu/rendering_lib/camera_out.o \
 	gpu/rendering_lib/loadfile.o gpu/rendering_lib/display.o gpu/rendering_lib/model.o \
-	gpu/rendering_lib/mesh.o gpu/rendering_lib/error.o gpu/rendering_lib/texture.o gpu/rendering_lib/stb_image.o gpu/rendering_lib/camera.o gpu/rendering_lib/render_public.o gpu/rendering_lib/render_manager.o main.o mmu.o cpu/cpu.o cpu/microcode.o cpu/mem.c cpu/logger.o bus_debug/bus_debug.o -o out $(LIBS)
+	gpu/rendering_lib/mesh.o gpu/rendering_lib/error.o gpu/rendering_lib/texture.o gpu/rendering_lib/stb_image.o gpu/rendering_lib/camera.o gpu/rendering_lib/render_public.o gpu/rendering_lib/render_manager.o main.o mmu.o cpu/cpu.o cpu/microcode.o cpu/mem.c cpu/logger.o bus_debug/bus_debug.o cpu/bus_io.o -o out $(LIBS)
 run:
 	$(MAKE) main
 	./out
