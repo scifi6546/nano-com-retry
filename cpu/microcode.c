@@ -696,6 +696,48 @@ void decode_instruction(unsigned int instruction){
 			}
 		}
 	}
+	if(opcode==0x86){
+		//add constant
+		if(dest_reg&0b100){
+			//dest is ptr
+			//LOAD STRATCH_REGISTER dest_reg
+			//ADD_C STRATCH_REGISTER constant
+			//MEM_WRITE_R dest_reg STRATCH_REGISTER
+			//ADD_C IP 4
+			struct microins ins;
+				ins.opcode=LOAD;
+				ins.source=dest_reg;
+				ins.destination=STRATCH_REGISTER;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=ADD_C;
+				ins.source=constant;
+				ins.destination=STRATCH_REGISTER;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=MEM_WRITE_R;
+				ins.source=STRATCH_REGISTER;
+				ins.destination=dest_reg;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
+			push_microins(&MICRO_STACK,ins);
+				
+		}else{
+			//dest is not ptr
+			//
+			//ADD_C dest_reg constant
+			//ADD_C IP 4
+			struct microins ins;
+				ins.opcode=ADD_C;
+				ins.source=constant;
+				ins.destination=dest_reg;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
+			push_microins(&MICRO_STACK,ins);
+		}
+	}
 	
 	//out
 	if(opcode==0xA){
