@@ -9,6 +9,8 @@
 //set to 1 initially so that system does not error out
 //on boot
 char MEM_OPS_TICK=1;
+//if set to 1 do not do anything in current cycle
+char SKIP_CYCLE=0;
 unsigned char memory_stage=DEVICE_SELECT;
 struct mem_result load_mem(struct ram_bus *bus,unsigned int address){
 	if(MEM_OPS_TICK!=0){
@@ -19,9 +21,13 @@ struct mem_result load_mem(struct ram_bus *bus,unsigned int address){
 	if(memory_stage==DEVICE_SELECT){
 		memory_stage=ADDRESS_WRITE;
 	}else if(memory_stage==ADDRESS_WRITE){
-		bus->address_bus=address;
-		bus->WRITE_OR_READ=READ;
-		memory_stage=MMU_READ;
+		if(SKIP_CYCLE==0){
+			bus->address_bus=address;
+			bus->WRITE_OR_READ=READ;
+			memory_stage=MMU_READ;
+		}else{
+			memory_stage=MMU_READ;
+		}
 	}else if(memory_stage==MMU_READ){
 		memory_stage=DATA_READ;
 	}else if(memory_stage==DATA_READ){
@@ -29,6 +35,7 @@ struct mem_result load_mem(struct ram_bus *bus,unsigned int address){
 		struct mem_result res;
 		res.data = bus->data_bus;
 		res.progress=RES_DONE;
+		SKIP_CYCLE=0;
 		return res;
 	}
 	struct mem_result res;
@@ -45,16 +52,22 @@ struct mem_result write_mem(struct ram_bus *bus,unsigned int address,unsigned sh
 	if(memory_stage==DEVICE_SELECT){
 		memory_stage=ADDRESS_WRITE;
 	}else if(memory_stage==ADDRESS_WRITE){
-		bus->WRITE_OR_READ=WRITE;
-		bus->address_bus=address;
-		bus->data_bus=data;
-		memory_stage=MMU_READ;
+		if(SKIP_CYCLE==0){
+			bus->WRITE_OR_READ=WRITE;
+			bus->address_bus=address;
+			bus->data_bus=data;
+			memory_stage=MMU_READ;
+		}else{
+
+			memory_stage=MMU_READ;
+		}
 	}else if(memory_stage==MMU_READ){
 
 		memory_stage=DATA_READ;
 	}else if(memory_stage==DATA_READ){
 		struct mem_result res;
 		res.progress=RES_DONE;
+		SKIP_CYCLE=0;
 		return res;
 	}
 	struct mem_result res;
@@ -64,6 +77,10 @@ void tick_mem(){
 	if(MEM_OPS_TICK!=0){
 		MEM_OPS_TICK=0;
 	}else{
-		add_log(ERROR,"RAM did not tick!","");
+		add_log(INFO,"RAM did not tick!","");
+		MEM_OPS_TICK=0;
+		SKIP_CYCLE=1;
+		
+		//tick memory
 	}
 }

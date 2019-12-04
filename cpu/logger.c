@@ -1,6 +1,6 @@
 #include "logger.h"
 #include <stdio.h>
-const int MAX_LOG=INFO;
+const int MAX_LOG=BUS_OPS;
 const char INTERACTIVE=1;
 void add_log(int severity,char *title,char* data){
 	struct log l;
