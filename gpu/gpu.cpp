@@ -2,8 +2,10 @@
 #include <mutex>
 #include <unistd.h>
 #include <assert.h>
+#include <stdio.h>
 #include "rendering_lib/render_public.h"
 #include "gpu.h"
+#include "../logger.h"
 std::mutex mtx;
 const int width = 256;
 const int height = 256;
@@ -120,13 +122,18 @@ void gpu_tick(bus *sys_bus, ram_bus *mem_bus){
 				color = data_in>>12;
 			draw_duration = data_in^0xF000;
 			unsigned short addr = x_axis+y_axis*256;
+			char buffer[80];
+			sprintf(buffer,"putting color 0x%x at addr 0x%x",addr,color);
+			add_log(GPU_INFO,"gpu_tick",buffer);
 			
 				for(unsigned char i=0;
 						i<draw_duration;i++){
-				vram.setMem(i+ addr,color);
+					vram.setMem(i+ addr,color);
 			}
 		}
 		cycle_num++;
 	}
+	sys_bus->device_select=0;
+	sys_bus->data=0;
 		mtx.unlock();
 }

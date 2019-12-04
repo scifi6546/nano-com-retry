@@ -4,9 +4,11 @@ struct log{
 	char * log_contents;
 	#define ERROR 0
 	#define BUS_IO 1
-	#define PROG_FLOW 2
-	#define CPU_STATE 3
-	#define INFO 4
+	#define BUS_DBG 2
+	#define GPU_INFO 3 
+	#define PROG_FLOW 4
+	#define CPU_STATE 5
+	#define INFO 5
 
 	int severity;
 };
