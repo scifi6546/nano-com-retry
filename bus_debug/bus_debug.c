@@ -17,9 +17,14 @@ void dbg_tick(struct bus *in, struct ram_bus *foo){
 	if(!debug){
 		return;
 	}
-	char buffer[80];
-	sprintf(buffer,"bus device: 0x%x bus data: 0x%x",in->device_select,in->data);
-	add_log(BUS_DBG,"dbg_tick",buffer);
+	if(in->device_select!=0){
+		char buffer[80];
+		sprintf(buffer,
+			"bus device: 0x%x bus data: 0x%x",
+			in->device_select,in->data);
+	
+		add_log(BUS_DBG,"dbg_tick",buffer);
+	}
 	switch (index%4){
 		case 0:
 			mem_dbg_selected_device=foo->device_select;

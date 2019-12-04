@@ -130,10 +130,10 @@ struct microins{
 	#define BUFF_OUT_REG 0xA//puts data onto a buffer to be written
 	#define BUFF_OUT_C 0xB//puts data onto a buffer to be written
 	#define COMMIT_OUT 0xC
-	unsigned short opcode=0;
-	unsigned short source=0;
-	unsigned short destination=0;
-	unsigned char progress=TO_EXEC;
+	u16 opcode=0;
+	u16 source=0;
+	u16 destination=0;
+	u8 progress=TO_EXEC;
 
 };
 
@@ -144,7 +144,9 @@ struct micro_stack{
 };
 void push_microins(struct micro_stack *stack,struct microins instruction){
 	char s[80];
-	sprintf(s,"pushing opcode %i onto microstack",instruction.opcode);
+	sprintf(s,"pushing opcode 0x%x dest: 0x%x src: 0x%x onto microstack",
+		instruction.opcode,instruction.destination,
+		instruction.source);
 	add_log(INFO,"push_microins",s);
 	sprintf(s,"current_ins: 0x%x\n",stack->size);
 	add_log(INFO,"push_microins",s);
@@ -296,9 +298,13 @@ char execute_instruction(struct bus *sys_bus,struct ram_bus *ram,char can_mem){
 
 		}else if(ins.opcode==BUFF_OUT_C){
 			u16 data= ins.source;
-			u16 dev_id = get_register(ins.destination);
+			u8 dev_id = (u8) get_register(ins.destination);
+			char buffer[80];
+			sprintf(buffer,"executing BUFF_OUT_C data: 0x%x dev_id: 0x%x",
+				data,dev_id);
+			add_log(INFO,"execute_instruction",buffer);
 
-			buffer_bus(sys_bus,data,(u8) dev_id);
+			buffer_bus(sys_bus,data, dev_id);
 			pop_top_microins(&MICRO_STACK);
 			return execute_instruction(sys_bus,ram,can_mem);
 		}else if(ins.opcode==COMMIT_OUT){
@@ -331,13 +337,12 @@ void decode_instruction(unsigned int instruction){
 	add_log(INFO,"decode_instruction",s);
 	//getting the second byte
 	u8 regs = (instruction>>0x10)&0x00FF;
-	u16 constant = instruction&0x00FF;
+	u16 constant = instruction&0x00FFFF;
 	//move reg into reg
 	u8 dest_reg = (regs & 0b11110000)>>0x4;
 	u8 src_reg = regs & 0b00001111;
-	sprintf(s,"src reg: 0x%x",src_reg);
-	add_log(INFO,"decode_instruction",s);
-	sprintf(s,"dest reg: 0x%x",dest_reg);
+	sprintf(s,"src reg: 0x%x dest_reg: 0x%x constant: 0x%x",
+		src_reg,dest_reg,constant);
 	add_log(INFO,"decode_instruction",s);
 	if(opcode==0x0){
 		if(dest_reg&0b1000==0b1000){
@@ -895,6 +900,8 @@ void decode_instruction(unsigned int instruction){
 	if(opcode==0x8A){
 		//buff_out constant
 		if(dest_reg&0b1000==0b1000){
+			add_log(INFO,"decode_instruction",
+				"buff_out dest is ptr");
 			//dest is ptr
 			//LOAD STRATCH_REGISTER dest_reg
 			//BUFF_OUT_REG STRATCH_REGISTER constant
@@ -904,7 +911,7 @@ void decode_instruction(unsigned int instruction){
 				ins.source=dest_reg;
 				ins.destination=STRATCH_REGISTER;
 			push_microins(&MICRO_STACK,ins);
-				ins.opcode=BUFF_OUT_REG;
+				ins.opcode=BUFF_OUT_C;
 				ins.source=constant;
 				ins.destination=STRATCH_REGISTER;
 			push_microins(&MICRO_STACK,ins);
@@ -914,11 +921,17 @@ void decode_instruction(unsigned int instruction){
 			push_microins(&MICRO_STACK,ins);
 
 		}else{
+			char buffer[80];
+			sprintf(buffer,"buff_out dest not ptr outputing: 0x%x",
+					constant);
+			add_log(INFO,"decode_instruction",
+				buffer);
 			//BUFF_OUT_REG dest_reg constant
 			//ADD_C IP 4
 			//dest is not ptr
+			//
 			struct microins ins;
-				ins.opcode=BUFF_OUT_REG;
+				ins.opcode=BUFF_OUT_C;
 				ins.source=constant;
 				ins.destination=dest_reg;
 			push_microins(&MICRO_STACK,ins);

@@ -105,6 +105,7 @@ int boot_gpu(){
 //actual emulation code
 char x_axis = 0;
 char y_axis = 0;
+unsigned short addr=0;
 char color = 0;
 unsigned char draw_duration = 0;
 const char device_id = 0x02;
@@ -115,15 +116,16 @@ void gpu_tick(bus *sys_bus, ram_bus *mem_bus){
 	if(sys_bus->device_select==device_id){
 		unsigned short data_in = sys_bus->data;
 		if(cycle_num%2==0){
-			x_axis =data_in>>8;
-			y_axis = data_in^0xFF00;
-		}if(cycle_num%2==1){
-			if(img_disp==0)
-				color = data_in>>12;
-			draw_duration = data_in^0xF000;
-			unsigned short addr = x_axis+y_axis*256;
+			addr=data_in;
 			char buffer[80];
-			sprintf(buffer,"putting color 0x%x at addr 0x%x",addr,color);
+			sprintf(buffer,"getting address: 0x%x",addr);
+			add_log(GPU_INFO,"gpu_tick",buffer);
+		
+		}else if(cycle_num%2==1){
+			color = data_in>>12;
+			draw_duration = data_in&0x000F;
+			char buffer[80];
+			sprintf(buffer,"putting color 0x%x at addr 0x%x raw_data: 0x%x",color,addr,data_in);
 			add_log(GPU_INFO,"gpu_tick",buffer);
 			
 				for(unsigned char i=0;
