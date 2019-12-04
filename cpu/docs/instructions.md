@@ -51,6 +51,10 @@ The invalid instruction is reserved as 0b01111111 and 0b11111111
 | and     | 0x9    |
 | bout    | 0xA    | | buffers data to be put onto the system bus,dest is device id ,src is the data to be buffered
 | out     | 0xB
+| cmp     | 0xC    | | Compares src and dest registers status is placed into comparision register
+| jg      | 0xD
+| je      | 0xE
+| jl      | 0xF
 
 ## example program
 this program puts the cpu into an infinte loop

@@ -13,6 +13,8 @@
 #define SO 0x7
 #define STRATCH_REGISTER 0x8
 #define STRATCH_REGISTER2 0x9
+#define STATUS_REGISTER 0x10
+
 typedef unsigned short u16;
 typedef unsigned char u8;
 typedef unsigned int u32;
@@ -25,6 +27,7 @@ u16 ip =0;
 u16 io=0;
 u16 sp=0;
 u16 so=0;
+u16 stat_reg=0;
 u16 scratch=0;
 u16 scratch2=0;
 u16 get_register(char reg_code){
@@ -49,6 +52,8 @@ u16 get_register(char reg_code){
 			return scratch;
 		case STRATCH_REGISTER2:
 			return scratch2;
+		case STATUS_REGISTER:
+			return stat_reg;
 	}
 }
 void set_register(u8 reg_code,u16 data){
@@ -72,6 +77,8 @@ void set_register(u8 reg_code,u16 data){
 		scratch=data;
 	}else if(reg_code==STRATCH_REGISTER2){
 		scratch2=data;
+	}else if(reg_code==STATUS_REGISTER){
+		stat_reg=data;
 	}
 }
 u32 get_reg_address(u8 reg_code){
@@ -130,6 +137,13 @@ struct microins{
 	#define BUFF_OUT_REG 0xA//puts data onto a buffer to be written
 	#define BUFF_OUT_C 0xB//puts data onto a buffer to be written
 	#define COMMIT_OUT 0xC
+	#define CMP_R 0xD
+		#define CMP_E 0b1
+		#define CMP_G 0b10
+		#define CMP_L 0b100
+	#define JE 0xE
+	#define JG 0xF
+	#define JL 0x10
 	u16 opcode=0;
 	u16 source=0;
 	u16 destination=0;
@@ -317,6 +331,50 @@ char execute_instruction(struct bus *sys_bus,struct ram_bus *ram,char can_mem){
 			}else{
 				return NOT_DONE_EXEC;
 			}
+		}else if(ins.opcode==CMP_R){
+			u16 lhs = get_register(ins.destination);
+			u16 rhs = get_register(ins.source);
+			u16 temp_status=0;
+			if(lhs==rhs){
+				temp_status+=CMP_E;
+			}if(lhs>rhs){
+				temp_status+=CMP_G;
+			}if(lhs<rhs){
+				temp_status+=CMP_L;
+			}
+			set_register(STATUS_REGISTER,temp_status);
+			pop_top_microins(&MICRO_STACK);
+			return execute_instruction(sys_bus,ram,can_mem);
+		}else if(ins.opcode==JE){
+			if(get_register(STATUS_REGISTER)&CMP_E==CMP_E){
+				set_register(IP,ins.destination);
+			}else{
+				u16 ip_temp = get_register(IP);
+				ip_temp+=4;
+				set_register(IP,ip_temp);
+			}
+			pop_top_microins(&MICRO_STACK);
+			return execute_instruction(sys_bus,ram,can_mem);
+		}else if(ins.opcode==JG){
+			if(get_register(STATUS_REGISTER)&CMP_G==CMP_G){
+				set_register(IP,ins.destination);
+			}else{
+				u16 ip_temp = get_register(IP);
+				ip_temp+=4;
+				set_register(IP,ip_temp);
+			}
+			pop_top_microins(&MICRO_STACK);
+			return execute_instruction(sys_bus,ram,can_mem);
+		}else if(ins.opcode==JL){
+			if(get_register(STATUS_REGISTER)&CMP_L==CMP_L){
+				set_register(IP,ins.destination);
+			}else{
+				u16 ip_temp = get_register(IP);
+				ip_temp+=4;
+				set_register(IP,ip_temp);
+			}
+			pop_top_microins(&MICRO_STACK);
+			return execute_instruction(sys_bus,ram,can_mem);
 		}
 	}else{
 		add_log(ERROR,"execute instruction","null instruction found");
@@ -954,6 +1012,16 @@ void decode_instruction(unsigned int instruction){
 			ins.source=4;
 			ins.destination=IP;
 		push_microins(&MICRO_STACK,ins);
+	}
+	if(opcode==0xC){
+		//cmp two registers
+		if(src_reg&0b1000==0b1000){
+			//src is ptr
+			
+
+		}else{
+			//src is not ptr
+		}
 	}
 
 
