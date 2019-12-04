@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "../bus.h"
+#include "../logger.h"
 #include <iostream>
 #include <string>
 void boot_dbg(){
@@ -13,9 +14,12 @@ unsigned char mem_dbg_read_or_write;
 unsigned short mem_dbg_data;
 char debug=1;
 void dbg_tick(struct bus *in, struct ram_bus *foo){
-	if(debug==1){
+	if(!debug){
 		return;
 	}
+	char buffer[80];
+	sprintf(buffer,"bus device: 0x%x bus data: 0x%x",in->device_select,in->data);
+	add_log(BUS_DBG,"dbg_tick",buffer);
 	switch (index%4){
 		case 0:
 			mem_dbg_selected_device=foo->device_select;
@@ -28,9 +32,6 @@ void dbg_tick(struct bus *in, struct ram_bus *foo){
 			break;
 		case 3:
 			mem_dbg_data=foo->data_bus;
-			printf("address: %x data_returned: %x\n",mem_dbg_address,mem_dbg_data);
-			std::string foo;
-			std::cin>>foo;
 			break;
 	}
 	index++;

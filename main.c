@@ -12,10 +12,11 @@ int main(){
 	boot_gpu();
 	boot_dbg();
 	while(0==0){
+
 		cpu_tick(&SYSTEM_BUS,&MEMORY_BUS);
 		gpu_tick(&SYSTEM_BUS,&MEMORY_BUS);
 		mmu_tick(&SYSTEM_BUS,&MEMORY_BUS);
-		dbg_tick(&SYSTEM_BUS,&MEMORY_BUS);
+		//dbg_tick(&SYSTEM_BUS,&MEMORY_BUS);
 	//	usleep(10);
 	}
 	return 0;
