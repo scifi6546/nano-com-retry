@@ -1,11 +1,12 @@
 #include "mmu.h"
+#include "logger.h"
 #include <stdio.h>
 #define RAM_MAX_ADDRESSIBLE 0xffff
 int counter=0;
 char selected_device=0x0;
 char read_or_write=0x0;
 unsigned int address=0x0;
-short data_write = 0x0;
+unsigned short data_write = 0x0;
 unsigned char ram[RAM_MAX_ADDRESSIBLE+1];
 
 
@@ -45,8 +46,14 @@ void bus_write(struct ram_bus *in){
 		in->data_bus+=ram[address+1];	
 	}
 	if(read_or_write==WRITE){
-
-		ram[address&!0xFFFFFF0000000000]=data_write;
+		char buffer[80];
+		unsigned short upper = data_write<<8;
+		unsigned short lower = data_write&0x00ff;
+		sprintf(buffer,"mmu writing data 0x%x %x to addr 0x%x",
+				upper,lower,address);
+		add_log(INFO,"bus_write",buffer);
+		ram[address&0xFFFFF]=upper;
+		ram[(address+1)&0xFFFFF]=lower;
 	}
 }
 //systembus not needed but used for completness sake

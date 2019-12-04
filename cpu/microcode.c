@@ -26,7 +26,8 @@ u16 r1o=0;
 u16 ip =0;
 u16 io=0;
 u16 sp=0;
-u16 so=0;
+//setting stack to be far away to not overwrite data
+u16 so=1;
 u16 stat_reg=0;
 u16 scratch=0;
 u16 scratch2=0;
@@ -99,7 +100,7 @@ u32 get_reg_address(u8 reg_code){
 		return o;
 	}else if(reg_code==SP){
 		u32 o=so;
-		o<<0x10;
+		o<<=0x10;
 		o+=sp;
 		return o;
 	}else{
@@ -108,7 +109,8 @@ u32 get_reg_address(u8 reg_code){
 }
 void log_state(){
 	char string[80];
-	sprintf(string,"r0: %i \nr1: %i\nip: %i\nsp: %i\n",r0,r1,ip,sp);
+	sprintf(string,"r0: 0x%x \nr1: 0x%x\nip: 0x%x\nsp: 0x%x so:0x%x\n",r0,r1,ip,sp,so);
+
 	add_log(CPU_STATE,"register state",string);
 }
 #define M_NULL_INS 0x0
@@ -230,6 +232,12 @@ char execute_instruction(struct bus *sys_bus,struct ram_bus *ram,char can_mem){
 			struct mem_result res = load_mem(ram,addr);
 			
 			if(res.progress==RES_DONE){
+				char buffer[80];
+				sprintf(buffer,
+					"loading addr 0x%x",
+					addr);
+				add_log(INFO,"execute_instruction",
+					buffer);
 				set_register(ins.destination,res.data);
 				pop_top_microins(&MICRO_STACK);
 				return execute_instruction(sys_bus,ram,can_mem);
@@ -264,6 +272,10 @@ char execute_instruction(struct bus *sys_bus,struct ram_bus *ram,char can_mem){
 				return NOT_DONE_EXEC;
 			u32 addr=get_reg_address(ins.destination);
 			u16 data = get_register(ins.source);
+			char buffer[80];
+			sprintf(buffer,"writing 0x%x to addr 0x%x",
+					data,addr);
+			add_log(INFO,"execute_instruction",buffer);
 			struct mem_result res = write_mem(ram,addr,data);
 			if(res.progress==RES_DONE){
 				pop_top_microins(&MICRO_STACK);
@@ -640,6 +652,7 @@ void decode_instruction(unsigned int instruction){
 			//LOAD scratch_reg src_reg
 			//MEM_WRITE_R SP scratch_reg
 			//REG_MOV_C scratch_reg 0
+			//ADD_C IP 4
 			struct microins ins;
 				ins.opcode=INCR_REG;
 				ins.source=SP;
@@ -656,10 +669,16 @@ void decode_instruction(unsigned int instruction){
 				ins.source=0;
 				ins.destination=STRATCH_REGISTER;
 			push_microins(&MICRO_STACK,ins);
-		}if(src_reg&0b1000==0b0000){
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
+			push_microins(&MICRO_STACK,ins);
+				
+		}else{
 			//src is not ptr
 			//incr sp
 			//MEM_WRITE_R sp src_reg
+			//ADD_C IP 4
 			struct microins ins;
 				ins.opcode=INCR_REG;
 				ins.source=SP;
@@ -668,12 +687,17 @@ void decode_instruction(unsigned int instruction){
 				ins.source=src_reg;
 				ins.destination=SP;
 			push_microins(&MICRO_STACK,ins);
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
+			push_microins(&MICRO_STACK,ins);
 		}
 	}
 	//push constant
 	if(opcode==0x84){
 		//incr sp
 		//MEM_WRITE_C sp, constant
+		//ADD_C IP 4
 		struct microins ins;
 			ins.opcode=INCR_REG;
 			ins.source=SP;
@@ -682,12 +706,18 @@ void decode_instruction(unsigned int instruction){
 			ins.source=constant;
 			ins.destination=SP;
 		push_microins(&MICRO_STACK,ins);
+			ins.opcode=ADD_C;
+			ins.source=4;
+			ins.destination=IP;
+		push_microins(&MICRO_STACK,ins);
 	}
 	if(opcode==0x05){
-		if(src_reg&0b1000==0b1000){
+		//pop constant
+		if(dest_reg&0b1000==0b100){
 			//register is ptr memory
 			//MEM_WRITE_R dest_reg SP
 			//dec SP
+			//ADD_C IP 4
 			struct microins ins;
 				ins.opcode=MEM_WRITE_R;
 				ins.source=SP;
@@ -696,11 +726,17 @@ void decode_instruction(unsigned int instruction){
 				ins.opcode=DECR_REG;
 				ins.source=SP;
 			push_microins(&MICRO_STACK,ins);
-		}
-		if(src_reg&0b1000==0b0000){
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
+			push_microins(&MICRO_STACK,ins);
+		}else{
 			//register is not a ptr
 			//LOAD dest_reg SP
 			//DEC SP
+			//ADD_C IP 4
+			add_log(INFO,"decode_instruction",
+				"decoding pop");
 			struct microins ins;
 				ins.opcode=LOAD;
 				ins.source=SP;
@@ -708,6 +744,10 @@ void decode_instruction(unsigned int instruction){
 			push_microins(&MICRO_STACK,ins);
 				ins.opcode=DECR_REG;
 				ins.source=SP;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
 			push_microins(&MICRO_STACK,ins);
 		}
 	}if(opcode==0x06){
@@ -1022,7 +1062,61 @@ void decode_instruction(unsigned int instruction){
 		}else{
 			//src is not ptr
 		}
+	}if(opcode==0x8C){
+		//cmp dest and const 
+		if(src_reg&0b1000==0b1000){
+			//src is ptr
+			//LOAD STRATCH_REGISTER dest_reg
+			//REG_MOV_C STRATCH_REGISTER2 constant
+			//CMP_R STRATCH_REGISTER STRATCH_REGISTER2
+			//ADD_C IP 4
+			struct microins ins;
+				ins.opcode=LOAD;
+				ins.source=dest_reg&0b0111;
+				ins.destination=STRATCH_REGISTER;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=REG_MOV_C;
+				ins.source=constant;
+				ins.destination=STRATCH_REGISTER2;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=CMP_R;
+				ins.source=STRATCH_REGISTER;
+				ins.destination=STRATCH_REGISTER2;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
+			push_microins(&MICRO_STACK,ins);
+		}else{
+			//src is not ptr
+			//REG_MOV_C STRATCH_REGISTER constant
+			//CMP_R dest_reg STRATCH_REGISTER
+			//ADD_C IP 4
+			struct microins ins;
+				ins.opcode=REG_MOV_C;
+				ins.source=constant;
+				ins.destination=STRATCH_REGISTER;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=CMP_R;
+				ins.source=STRATCH_REGISTER;
+				ins.destination=dest_reg;
+			push_microins(&MICRO_STACK,ins);
+				ins.opcode=ADD_C;
+				ins.source=4;
+				ins.destination=IP;
+			push_microins(&MICRO_STACK,ins);
+		}
 	}
+	if(opcode==0x8E){
+		//JMP constant
+		//JE constant
+		struct microins ins;
+			ins.opcode=JE;
+			ins.destination=constant;
+		push_microins(&MICRO_STACK,ins);
+
+	}
+
 
 
 }

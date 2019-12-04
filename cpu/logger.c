@@ -1,7 +1,8 @@
 #include "../logger.h"
 #include <stdio.h>
-const int MAX_LOG=GPU_INFO;
-const char INTERACTIVE=ERROR;
+const int MAX_LOG=ERROR;
+const char INTERACTIVE=INFO;
+unsigned int slp_time=0;
 void add_log(int severity,char *title,char* data){
 	struct log l;
 	l.title=title;
